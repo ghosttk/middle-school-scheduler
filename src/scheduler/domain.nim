@@ -39,12 +39,21 @@ type
     periodsPerDay*: int        ## 每天总节数
     morningCount*: int         ## 上午节数
 
+  Rule* = object               ## 排课规则 (来自 config/rules.json)
+    subject*: string           ## 科目名
+    teacher*: string           ## 教师名; 空串 = 该科目全体教师
+    days*: seq[string]         ## 星期 ["一"] ; 空 = 所有天
+    periods*: seq[int]         ## 节次 [2] (1-based) ; 空 = 全部节次
+    kind*: string              ## "必排" | "不排" | "优先"
+    comment*: string
+
   School* = object             ## 学校排课完整数据
     teachers*: seq[Teacher]
     classes*: seq[GradeClass]
     subjects*: seq[Subject]
     tasks*: seq[Task]
     params*: Params
+    rules*: seq[Rule]
 
   Cell* = object
     taskId*: string            ## 为空字符串表示空闲
@@ -114,7 +123,8 @@ proc validate*(s: School): tuple[ok: bool, msg: string] =
     if h > cap:
       return (false, "班级 " & c.name & " 总课时 " & $h & " 超过可用时段 " & $cap)
   for t in s.tasks:
-    if s.findTeacher(t.teacherId).id == "": return (false, "任务引用了不存在的教师")
+    if t.teacherId.len > 0 and s.findTeacher(t.teacherId).id == "":
+      return (false, "任务引用了不存在的教师")
     if s.findClass(t.classId).id == "": return (false, "任务引用了不存在的班级")
     if s.findSubject(t.subjectId).id == "": return (false, "任务引用了不存在的科目")
   return (true, "ok")

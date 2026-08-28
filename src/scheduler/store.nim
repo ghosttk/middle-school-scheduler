@@ -3,6 +3,7 @@ import std/json
 import std/os
 import std/sequtils
 import domain
+import configloader
 
 type
   Store* = ref object
@@ -40,6 +41,19 @@ proc loadFromDisk*(s: Store): tuple[ok: bool, msg: string] =
     return (true, "已加载 " & f)
   except CatchableError as e:
     return (false, "加载失败: " & e.msg)
+
+proc loadFromConfig*(s: Store): tuple[ok: bool, msg: string] =
+  ## 从项目 config/classes.json + config/rules.json 载入
+  let r = loadConfig()
+  if not r.ok:
+    return (false, r.msg)
+  s.school = r.sc
+  s.result = ScheduleResult(ok: false, message: "已载入配置, 待排课", score: 0)
+  s.dirty = true
+  return (true, r.msg)
+
+proc configAvailable*(): bool =
+  fileExists(classesPath())
 
 # ---- JSON 输出 ----
 proc fullStateJson*(s: Store): JsonNode =

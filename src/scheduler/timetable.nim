@@ -46,6 +46,59 @@ proc dayCounts(s: var Solver; key: string): var seq[int] =
     s.dayCnt[key] = newSeq[int](s.days)
   result = s.dayCnt[key]
 
+# ---- 排课规则辅助 ----
+proc dayIndexOf(d: string): int =
+  ## 星期中文 -> 0 基索引 (一=0 .. 日=6)
+  case d
+  of "一": 0
+  of "二": 1
+  of "三": 2
+  of "四": 3
+  of "五": 4
+  of "六": 5
+  of "日", "天": 6
+  else: -1
+
+proc ruleMatchesSlot(rule: Rule; day, period0: int): bool =
+  ## period0 为 0 基节次; rule.periods 为 1 基
+  if rule.days.len > 0:
+    var ok = false
+    for d in rule.days:
+      if dayIndexOf(d) == day: ok = true; break
+    if not ok: return false
+  if rule.periods.len > 0:
+    var ok = false
+    let p1 = period0 + 1
+    for p in rule.periods:
+      if p == p1: ok = true; break
+    if not ok: return false
+  result = true
+
+proc ruleAppliesToTask(rule: Rule; sc: School; task: Task): bool =
+  let subj = sc.findSubject(task.subjectId)
+  if subj.id == "": return false
+  if rule.subject != subj.name: return false
+  if rule.teacher.len > 0:
+    let tch = sc.findTeacher(task.teacherId)
+    if tch.id == "" or tch.name != rule.teacher: return false
+  result = true
+
+proc slotForbidden(sc: School; task: Task; day, period0: int): bool =
+  ## 不排: 该任务不得落在该时段
+  for rule in sc.rules:
+    if rule.kind != "不排": continue
+    if ruleAppliesToTask(rule, sc, task) and ruleMatchesSlot(rule, day, period0):
+      return true
+  result = false
+
+proc slotPreferred(sc: School; task: Task; day, period0: int): bool =
+  ## 优先: 该任务落在此时段可加分
+  for rule in sc.rules:
+    if rule.kind != "优先": continue
+    if ruleAppliesToTask(rule, sc, task) and ruleMatchesSlot(rule, day, period0):
+      return true
+  result = false
+
 # ---- 评分单个候选时段 ----
 proc scoreSlot(s: Solver; sc: School; task: Task; slot: int; dayCnt: int;
                usedDays: int): int =
@@ -65,6 +118,8 @@ proc scoreSlot(s: Solver; sc: School; task: Task; slot: int; dayCnt: int;
   scr += min(usedDays, 3)
   # 避免最后一节(下午末)排主科
   if period == s.periods - 1 and subj.isMain: scr -= 4
+  # 优先规则: 落入指定时段加分
+  if slotPreferred(sc, task, s.dayOfSlot(slot), period): scr += 8
   result = scr
 
 # ---- 单次构造 ----
@@ -75,6 +130,27 @@ proc construct(s: var Solver): tuple[placed: int, total: int, grids: seq[seq[Cel
     grids[ci] = newSeq[Cell](s.nSlots)
   var placed = 0
   var total = 0
+  # ---- 必排: 预占并锁定 (如升旗: 每周一第2节) ----
+  for ci in 0..<s.sc.classes.len:
+    let cl = s.sc.classes[ci]
+    for rule in s.sc.rules:
+      if rule.kind != "必排": continue
+      var ph: Task
+      var got = false
+      for t in s.sc.tasks:
+        if t.classId == cl.id and t.teacherId == "" and
+           s.sc.findSubject(t.subjectId).name == rule.subject:
+          ph = t; got = true; break
+      if not got: continue
+      let dIdx = if rule.days.len > 0: dayIndexOf(rule.days[0]) else: 0
+      let pIdx = if rule.periods.len > 0: rule.periods[0] - 1 else: 0
+      if dIdx < 0: continue
+      let slot = dIdx * s.periods + pIdx
+      if slot >= 0 and slot < s.nSlots and grids[ci][slot].taskId == "":
+        grids[ci][slot].taskId = ph.id
+        grids[ci][slot].locked = true
+        inc placed
+        inc total
   # 班级按总课时降序 (预计算, 避免闭包捕获 var Solver)
   let nClasses = s.sc.classes.len
   let classHours = block:
@@ -98,6 +174,7 @@ proc construct(s: var Solver): tuple[placed: int, total: int, grids: seq[seq[Cel
     var lessons: seq[Task] = @[]
     for t in s.sc.tasks:
       if t.classId != cl.id: continue
+      if t.teacherId == "": continue   # 必排占位任务已预排, 不再当作普通课时
       for _ in 1..t.hoursPerWeek:
         lessons.add(t)
     inc total, lessons.len
@@ -109,6 +186,7 @@ proc construct(s: var Solver): tuple[placed: int, total: int, grids: seq[seq[Cel
       for slot in 0..<s.nSlots:
         if grids[ci][slot].taskId != "": continue
         if not s.isTeacherFree(tk.teacherId, slot): continue
+        if slotForbidden(s.sc, tk, s.dayOfSlot(slot), s.periodOfSlot(slot)): continue
         cands.add(slot)
       if cands.len == 0:
         continue   # 该课时无法安置, 留空 -> 计入冲突
@@ -150,6 +228,7 @@ proc globalScore(s: Solver; grids: seq[seq[Cell]]): int =
       let per = s.periodOfSlot(slot)
       if subj.isMain and per < s.morning: inc score, 10
       if subj.isMain and per == s.periods - 1: dec score, 4
+      if slotPreferred(s.sc, t, day, per): inc score, 8
       daySubj[day].add(t.subjectId)
     for d in 0..<s.days:
       var seen: CountTable[string]

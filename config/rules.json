@@ -1,0 +1,28 @@
+{
+  "rules": [
+    {
+      "subject": "升旗",
+      "teacher": "",
+      "days": ["一"],
+      "periods": [2],
+      "kind": "必排",
+      "comment": "每周一第2节全校升旗仪式, 全体班级锁定该时段"
+    },
+    {
+      "subject": "语文",
+      "teacher": "",
+      "days": ["一"],
+      "periods": [1, 2, 3, 4, 5],
+      "kind": "不排",
+      "comment": "周一第1-5节(上午)不排语文"
+    },
+    {
+      "subject": "数学",
+      "teacher": "温永生",
+      "days": [],
+      "periods": [1, 2],
+      "kind": "优先",
+      "comment": "温永生的数学课优先排第1、2节; days 为空表示所有天"
+    }
+  ]
+}

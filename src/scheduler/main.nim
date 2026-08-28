@@ -23,14 +23,19 @@ proc main() =
 
   let api = newApi(port)
 
-  # 启动时尝试加载磁盘数据; 若无则载入示例数据方便首次使用
+  # 启动加载优先级: 磁盘历史数据 -> 项目 config 配置 -> 示例数据
   let r = api.store.loadFromDisk()
   if r.ok:
     echo r.msg
   else:
-    echo "未找到历史数据, 载入示例数据: " & r.msg
-    api.store.loadSample()
-    discard api.store.saveToDisk()
+    let rc = api.store.loadFromConfig()
+    if rc.ok:
+      echo "已从项目配置载入: " & rc.msg
+      discard api.store.saveToDisk()
+    else:
+      echo "未找到历史数据与配置, 载入示例数据: " & rc.msg
+      api.store.loadSample()
+      discard api.store.saveToDisk()
 
   let url = "http://127.0.0.1:" & $port & "/"
   echo "若浏览器未自动打开, 请手动访问: " & url

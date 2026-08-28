@@ -89,6 +89,10 @@ proc handle(req: Request, api: Api): Future[void] {.async.} =
         api.store.loadSample()
         await req.sendOk(%*{"ok": true, "msg": "已载入示例数据"})
         return
+      if path == "/api/config/load":
+        let r = api.store.loadFromConfig()
+        await req.sendOk(%*{"ok": r.ok, "msg": r.msg})
+        return
       if path == "/api/clear":
         api.store.result = ScheduleResult(ok: false, message: "已清空排课", score: 0)
         await req.sendOk(%*{"ok": true, "msg": "已清空排课结果"})

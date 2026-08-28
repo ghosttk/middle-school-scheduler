@@ -1,0 +1,986 @@
+{
+  "params": {
+    "daysPerWeek": 5,
+    "periodsPerDay": 8,
+    "morningCount": 4
+  },
+  "subjects": [
+    {
+      "name": "语文",
+      "weeklyHours": 0,
+      "isMain": true
+    },
+    {
+      "name": "数学",
+      "weeklyHours": 0,
+      "isMain": true
+    },
+    {
+      "name": "英语",
+      "weeklyHours": 0,
+      "isMain": true
+    },
+    {
+      "name": "物理",
+      "weeklyHours": 0,
+      "isMain": true
+    },
+    {
+      "name": "化学",
+      "weeklyHours": 0,
+      "isMain": true
+    },
+    {
+      "name": "生物",
+      "weeklyHours": 0,
+      "isMain": false
+    },
+    {
+      "name": "政治",
+      "weeklyHours": 0,
+      "isMain": false
+    },
+    {
+      "name": "历史",
+      "weeklyHours": 0,
+      "isMain": false
+    },
+    {
+      "name": "地理",
+      "weeklyHours": 0,
+      "isMain": false
+    },
+    {
+      "name": "社团课",
+      "weeklyHours": 0,
+      "isMain": false
+    },
+    {
+      "name": "体育",
+      "weeklyHours": 0,
+      "isMain": false
+    },
+    {
+      "name": "信息",
+      "weeklyHours": 0,
+      "isMain": false
+    },
+    {
+      "name": "心理",
+      "weeklyHours": 0,
+      "isMain": false
+    },
+    {
+      "name": "美术",
+      "weeklyHours": 0,
+      "isMain": false
+    },
+    {
+      "name": "音乐",
+      "weeklyHours": 0,
+      "isMain": false
+    }
+  ],
+  "classes": [
+    {
+      "name": "241班",
+      "grade": "初中"
+    },
+    {
+      "name": "242班",
+      "grade": "初中"
+    },
+    {
+      "name": "243班",
+      "grade": "初中"
+    },
+    {
+      "name": "244班",
+      "grade": "初中"
+    },
+    {
+      "name": "251班",
+      "grade": "初中"
+    },
+    {
+      "name": "252班",
+      "grade": "初中"
+    },
+    {
+      "name": "253班",
+      "grade": "初中"
+    },
+    {
+      "name": "254班",
+      "grade": "初中"
+    },
+    {
+      "name": "261班",
+      "grade": "初中"
+    }
+  ],
+  "teachers": [
+    {
+      "name": "王塞北",
+      "subjects": [
+        "语文"
+      ]
+    },
+    {
+      "name": "温永生",
+      "subjects": [
+        "数学"
+      ]
+    },
+    {
+      "name": "吴新华",
+      "subjects": [
+        "英语"
+      ]
+    },
+    {
+      "name": "白建华",
+      "subjects": [
+        "物理"
+      ]
+    },
+    {
+      "name": "王岩敏",
+      "subjects": [
+        "化学"
+      ]
+    },
+    {
+      "name": "冯娜",
+      "subjects": [
+        "政治"
+      ]
+    },
+    {
+      "name": "谭泳新",
+      "subjects": [
+        "历史"
+      ]
+    },
+    {
+      "name": "王伟",
+      "subjects": [
+        "社团课"
+      ]
+    },
+    {
+      "name": "田光辉",
+      "subjects": [
+        "体育"
+      ]
+    },
+    {
+      "name": "杨春霞",
+      "subjects": [
+        "语文"
+      ]
+    },
+    {
+      "name": "马越锋",
+      "subjects": [
+        "英语"
+      ]
+    },
+    {
+      "name": "翟艳",
+      "subjects": [
+        "物理"
+      ]
+    },
+    {
+      "name": "许文慧",
+      "subjects": [
+        "化学"
+      ]
+    },
+    {
+      "name": "崔佳",
+      "subjects": [
+        "政治"
+      ]
+    },
+    {
+      "name": "赵丽娜",
+      "subjects": [
+        "语文"
+      ]
+    },
+    {
+      "name": "赵文娟",
+      "subjects": [
+        "数学"
+      ]
+    },
+    {
+      "name": "席晓琴",
+      "subjects": [
+        "物理"
+      ]
+    },
+    {
+      "name": "杨兰",
+      "subjects": [
+        "化学"
+      ]
+    },
+    {
+      "name": "韩雨娟",
+      "subjects": [
+        "数学"
+      ]
+    },
+    {
+      "name": "李春林",
+      "subjects": [
+        "英语"
+      ]
+    },
+    {
+      "name": "张晓丽",
+      "subjects": [
+        "语文"
+      ]
+    },
+    {
+      "name": "乔建芳",
+      "subjects": [
+        "数学"
+      ]
+    },
+    {
+      "name": "侯夏楠",
+      "subjects": [
+        "英语"
+      ]
+    },
+    {
+      "name": "殷晓旭",
+      "subjects": [
+        "物理"
+      ]
+    },
+    {
+      "name": "郝杰",
+      "subjects": [
+        "生物",
+        "社团课"
+      ]
+    },
+    {
+      "name": "张红艳",
+      "subjects": [
+        "政治"
+      ]
+    },
+    {
+      "name": "王姝",
+      "subjects": [
+        "历史"
+      ]
+    },
+    {
+      "name": "王德政",
+      "subjects": [
+        "地理"
+      ]
+    },
+    {
+      "name": "王涛",
+      "subjects": [
+        "体育"
+      ]
+    },
+    {
+      "name": "段智慧",
+      "subjects": [
+        "语文"
+      ]
+    },
+    {
+      "name": "宋文霞",
+      "subjects": [
+        "数学"
+      ]
+    },
+    {
+      "name": "王歌",
+      "subjects": [
+        "英语"
+      ]
+    },
+    {
+      "name": "苏宁",
+      "subjects": [
+        "物理"
+      ]
+    },
+    {
+      "name": "张慧玲",
+      "subjects": [
+        "物理"
+      ]
+    },
+    {
+      "name": "杨春艳",
+      "subjects": [
+        "数学"
+      ]
+    },
+    {
+      "name": "赵瑞锐",
+      "subjects": [
+        "英语"
+      ]
+    },
+    {
+      "name": "张恩亚",
+      "subjects": [
+        "生物",
+        "社团课"
+      ]
+    },
+    {
+      "name": "苏银霞",
+      "subjects": [
+        "地理"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "class": "241班",
+      "subject": "语文",
+      "teacher": "王塞北",
+      "hoursPerWeek": 5,
+      "hoursRaw": "5"
+    },
+    {
+      "class": "241班",
+      "subject": "数学",
+      "teacher": "温永生",
+      "hoursPerWeek": 6,
+      "hoursRaw": "4+1"
+    },
+    {
+      "class": "241班",
+      "subject": "英语",
+      "teacher": "吴新华",
+      "hoursPerWeek": 5,
+      "hoursRaw": "5"
+    },
+    {
+      "class": "241班",
+      "subject": "物理",
+      "teacher": "白建华",
+      "hoursPerWeek": 4,
+      "hoursRaw": "4"
+    },
+    {
+      "class": "241班",
+      "subject": "化学",
+      "teacher": "王岩敏",
+      "hoursPerWeek": 4,
+      "hoursRaw": "4"
+    },
+    {
+      "class": "241班",
+      "subject": "政治",
+      "teacher": "冯娜",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "241班",
+      "subject": "历史",
+      "teacher": "谭泳新",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "241班",
+      "subject": "社团课",
+      "teacher": "王伟",
+      "hoursPerWeek": 1,
+      "hoursRaw": "1"
+    },
+    {
+      "class": "241班",
+      "subject": "体育",
+      "teacher": "田光辉",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "242班",
+      "subject": "语文",
+      "teacher": "杨春霞",
+      "hoursPerWeek": 5,
+      "hoursRaw": "5"
+    },
+    {
+      "class": "242班",
+      "subject": "数学",
+      "teacher": "温永生",
+      "hoursPerWeek": 6,
+      "hoursRaw": "4+1"
+    },
+    {
+      "class": "242班",
+      "subject": "英语",
+      "teacher": "马越锋",
+      "hoursPerWeek": 5,
+      "hoursRaw": "5"
+    },
+    {
+      "class": "242班",
+      "subject": "物理",
+      "teacher": "翟艳",
+      "hoursPerWeek": 4,
+      "hoursRaw": "4"
+    },
+    {
+      "class": "242班",
+      "subject": "化学",
+      "teacher": "许文慧",
+      "hoursPerWeek": 4,
+      "hoursRaw": "4"
+    },
+    {
+      "class": "242班",
+      "subject": "政治",
+      "teacher": "崔佳",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "242班",
+      "subject": "历史",
+      "teacher": "谭泳新",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "242班",
+      "subject": "社团课",
+      "teacher": "王伟",
+      "hoursPerWeek": 1,
+      "hoursRaw": "1"
+    },
+    {
+      "class": "242班",
+      "subject": "体育",
+      "teacher": "田光辉",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "243班",
+      "subject": "语文",
+      "teacher": "赵丽娜",
+      "hoursPerWeek": 5,
+      "hoursRaw": "5"
+    },
+    {
+      "class": "243班",
+      "subject": "数学",
+      "teacher": "赵文娟",
+      "hoursPerWeek": 6,
+      "hoursRaw": "4+1"
+    },
+    {
+      "class": "243班",
+      "subject": "英语",
+      "teacher": "马越锋",
+      "hoursPerWeek": 5,
+      "hoursRaw": "5"
+    },
+    {
+      "class": "243班",
+      "subject": "物理",
+      "teacher": "席晓琴",
+      "hoursPerWeek": 4,
+      "hoursRaw": "4"
+    },
+    {
+      "class": "243班",
+      "subject": "化学",
+      "teacher": "杨兰",
+      "hoursPerWeek": 4,
+      "hoursRaw": "4"
+    },
+    {
+      "class": "243班",
+      "subject": "政治",
+      "teacher": "崔佳",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "243班",
+      "subject": "历史",
+      "teacher": "谭泳新",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "243班",
+      "subject": "社团课",
+      "teacher": "王伟",
+      "hoursPerWeek": 1,
+      "hoursRaw": "1"
+    },
+    {
+      "class": "243班",
+      "subject": "体育",
+      "teacher": "田光辉",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "244班",
+      "subject": "语文",
+      "teacher": "赵丽娜",
+      "hoursPerWeek": 5,
+      "hoursRaw": "5"
+    },
+    {
+      "class": "244班",
+      "subject": "数学",
+      "teacher": "韩雨娟",
+      "hoursPerWeek": 6,
+      "hoursRaw": "4+1"
+    },
+    {
+      "class": "244班",
+      "subject": "英语",
+      "teacher": "李春林",
+      "hoursPerWeek": 5,
+      "hoursRaw": "5"
+    },
+    {
+      "class": "244班",
+      "subject": "物理",
+      "teacher": "席晓琴",
+      "hoursPerWeek": 4,
+      "hoursRaw": "4"
+    },
+    {
+      "class": "244班",
+      "subject": "化学",
+      "teacher": "杨兰",
+      "hoursPerWeek": 4,
+      "hoursRaw": "4"
+    },
+    {
+      "class": "244班",
+      "subject": "政治",
+      "teacher": "崔佳",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "244班",
+      "subject": "历史",
+      "teacher": "谭泳新",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "244班",
+      "subject": "社团课",
+      "teacher": "王伟",
+      "hoursPerWeek": 1,
+      "hoursRaw": "1"
+    },
+    {
+      "class": "244班",
+      "subject": "体育",
+      "teacher": "田光辉",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "251班",
+      "subject": "语文",
+      "teacher": "张晓丽",
+      "hoursPerWeek": 5,
+      "hoursRaw": "5"
+    },
+    {
+      "class": "251班",
+      "subject": "数学",
+      "teacher": "乔建芳",
+      "hoursPerWeek": 6,
+      "hoursRaw": "4+1"
+    },
+    {
+      "class": "251班",
+      "subject": "英语",
+      "teacher": "侯夏楠",
+      "hoursPerWeek": 5,
+      "hoursRaw": "5"
+    },
+    {
+      "class": "251班",
+      "subject": "物理",
+      "teacher": "殷晓旭",
+      "hoursPerWeek": 3,
+      "hoursRaw": "3"
+    },
+    {
+      "class": "251班",
+      "subject": "化学",
+      "teacher": "许文慧",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "251班",
+      "subject": "生物",
+      "teacher": "郝杰",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "251班",
+      "subject": "政治",
+      "teacher": "张红艳",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "251班",
+      "subject": "历史",
+      "teacher": "王姝",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "251班",
+      "subject": "地理",
+      "teacher": "王德政",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "251班",
+      "subject": "社团课",
+      "teacher": "郝杰",
+      "hoursPerWeek": 1,
+      "hoursRaw": "1"
+    },
+    {
+      "class": "251班",
+      "subject": "体育",
+      "teacher": "王涛",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "252班",
+      "subject": "语文",
+      "teacher": "张晓丽",
+      "hoursPerWeek": 5,
+      "hoursRaw": "5"
+    },
+    {
+      "class": "252班",
+      "subject": "数学",
+      "teacher": "乔建芳",
+      "hoursPerWeek": 6,
+      "hoursRaw": "4+1"
+    },
+    {
+      "class": "252班",
+      "subject": "英语",
+      "teacher": "侯夏楠",
+      "hoursPerWeek": 5,
+      "hoursRaw": "5"
+    },
+    {
+      "class": "252班",
+      "subject": "物理",
+      "teacher": "殷晓旭",
+      "hoursPerWeek": 3,
+      "hoursRaw": "3"
+    },
+    {
+      "class": "252班",
+      "subject": "化学",
+      "teacher": "杨兰",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "252班",
+      "subject": "生物",
+      "teacher": "郝杰",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "252班",
+      "subject": "政治",
+      "teacher": "张红艳",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "252班",
+      "subject": "历史",
+      "teacher": "王姝",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "252班",
+      "subject": "地理",
+      "teacher": "王德政",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "252班",
+      "subject": "社团课",
+      "teacher": "郝杰",
+      "hoursPerWeek": 1,
+      "hoursRaw": "1"
+    },
+    {
+      "class": "252班",
+      "subject": "体育",
+      "teacher": "王涛",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "253班",
+      "subject": "语文",
+      "teacher": "段智慧",
+      "hoursPerWeek": 5,
+      "hoursRaw": "5"
+    },
+    {
+      "class": "253班",
+      "subject": "数学",
+      "teacher": "宋文霞",
+      "hoursPerWeek": 6,
+      "hoursRaw": "4+1"
+    },
+    {
+      "class": "253班",
+      "subject": "英语",
+      "teacher": "王歌",
+      "hoursPerWeek": 5,
+      "hoursRaw": "5"
+    },
+    {
+      "class": "253班",
+      "subject": "物理",
+      "teacher": "苏宁",
+      "hoursPerWeek": 3,
+      "hoursRaw": "3"
+    },
+    {
+      "class": "253班",
+      "subject": "化学",
+      "teacher": "杨兰",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "253班",
+      "subject": "生物",
+      "teacher": "郝杰",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "253班",
+      "subject": "政治",
+      "teacher": "张红艳",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "253班",
+      "subject": "历史",
+      "teacher": "王姝",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "253班",
+      "subject": "地理",
+      "teacher": "王德政",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "253班",
+      "subject": "社团课",
+      "teacher": "郝杰",
+      "hoursPerWeek": 1,
+      "hoursRaw": "1"
+    },
+    {
+      "class": "253班",
+      "subject": "体育",
+      "teacher": "王涛",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "254班",
+      "subject": "语文",
+      "teacher": "段智慧",
+      "hoursPerWeek": 5,
+      "hoursRaw": "5"
+    },
+    {
+      "class": "254班",
+      "subject": "数学",
+      "teacher": "宋文霞",
+      "hoursPerWeek": 6,
+      "hoursRaw": "4+1"
+    },
+    {
+      "class": "254班",
+      "subject": "英语",
+      "teacher": "王歌",
+      "hoursPerWeek": 5,
+      "hoursRaw": "5"
+    },
+    {
+      "class": "254班",
+      "subject": "物理",
+      "teacher": "张慧玲",
+      "hoursPerWeek": 3,
+      "hoursRaw": "3"
+    },
+    {
+      "class": "254班",
+      "subject": "化学",
+      "teacher": "杨兰",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "254班",
+      "subject": "生物",
+      "teacher": "郝杰",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "254班",
+      "subject": "政治",
+      "teacher": "张红艳",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "254班",
+      "subject": "历史",
+      "teacher": "王姝",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "254班",
+      "subject": "地理",
+      "teacher": "王德政",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "254班",
+      "subject": "社团课",
+      "teacher": "郝杰",
+      "hoursPerWeek": 1,
+      "hoursRaw": "1"
+    },
+    {
+      "class": "254班",
+      "subject": "体育",
+      "teacher": "王涛",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "261班",
+      "subject": "语文",
+      "teacher": "杨春霞",
+      "hoursPerWeek": 5,
+      "hoursRaw": "5"
+    },
+    {
+      "class": "261班",
+      "subject": "数学",
+      "teacher": "杨春艳",
+      "hoursPerWeek": 6,
+      "hoursRaw": "4+1"
+    },
+    {
+      "class": "261班",
+      "subject": "英语",
+      "teacher": "赵瑞锐",
+      "hoursPerWeek": 5,
+      "hoursRaw": "5"
+    },
+    {
+      "class": "261班",
+      "subject": "物理",
+      "teacher": "翟艳",
+      "hoursPerWeek": 1,
+      "hoursRaw": "1"
+    },
+    {
+      "class": "261班",
+      "subject": "生物",
+      "teacher": "张恩亚",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "261班",
+      "subject": "政治",
+      "teacher": "张红艳",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "261班",
+      "subject": "历史",
+      "teacher": "王姝",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "261班",
+      "subject": "地理",
+      "teacher": "苏银霞",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    },
+    {
+      "class": "261班",
+      "subject": "社团课",
+      "teacher": "张恩亚",
+      "hoursPerWeek": 1,
+      "hoursRaw": "1"
+    },
+    {
+      "class": "261班",
+      "subject": "体育",
+      "teacher": "田光辉",
+      "hoursPerWeek": 2,
+      "hoursRaw": "2"
+    }
+  ]
+}

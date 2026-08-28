@@ -72,11 +72,24 @@ scheduler/
 | POST | `/api/persist` | 写入磁盘 |
 | POST | `/api/load` | 从磁盘加载 |
 | POST | `/api/sample` | 载入示例数据 |
+| POST | `/api/config/load` | 从 `config/` 重新载入配置 |
 | POST | `/api/clear` | 清空排课结果 |
 
 ## 数据存储
 
 运行时数据保存于用户主目录：`~/.paimai/school.json`。
+
+## 配置文件
+
+项目 `config/` 下提供两份人可读的 JSON 配置，启动时若没有历史磁盘数据则自动加载（也可调 `POST /api/config/load` 重新载入）：
+
+- `config/classes.json`：班级—课程—教师表。每班列出开课科目、教师、周课时；`4+1` 表示 4 节单课 + 1 次连堂（共 6 课时）；课时为 0 或教师为空表示该班不开此课。
+- `config/rules.json`：排课规则。每条含 `subject` / `teacher`（空=全体）/ `days`（空=所有天，如 `["一"]`）/ `periods`（1 基，空=全部节次）/ `kind`：
+  - `必排`：硬性占用并锁定该时段（如升旗每周一第 2 节，全校锁定）
+  - `不排`：该科目/教师不得排入指定时段
+  - `优先`：软偏好，落入指定时段加分（择优时倾向）
+
+配置文件用名称（非 id）书写，应用加载时自动映射为内部 id 并构建 `School`。
 
 ## License
 
