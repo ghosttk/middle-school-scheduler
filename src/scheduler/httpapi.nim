@@ -2,9 +2,12 @@
 import std/asynchttpserver
 import std/asyncdispatch
 import std/json
+import std/strutils
+import std/os
 import domain
 import store
 import timetable
+import xlsxio
 
 # 编译期内嵌 www/index.html
 const IndexHtml {.strdefine.} = staticRead("../../www/index.html")
@@ -25,6 +28,18 @@ proc sendText(req: Request; code: HttpCode; body: string;
                     ("Access-Control-Allow-Origin", "*"),
                     ("Access-Control-Allow-Methods", "GET,POST,OPTIONS"),
                     ("Access-Control-Allow-Headers", "Content-Type")]))
+
+proc sendBytes(req: Request; code: HttpCode; body: string;
+               ct: string; filename = "") {.async.} =
+  var hs: seq[(string, string)] = @[
+    ("Content-Type", ct),
+    ("Access-Control-Allow-Origin", "*"),
+    ("Access-Control-Allow-Methods", "GET,POST,OPTIONS"),
+    ("Access-Control-Allow-Headers", "Content-Type")]
+  if filename.len > 0:
+    hs.add(("Content-Disposition",
+      "attachment; filename=\"" & filename & "\""))
+  await req.respond(code, body, newHttpHeaders(hs))
 
 proc sendOk(req: Request; node: JsonNode) {.async.} =
   await req.sendText(Http200, $node)
@@ -93,6 +108,25 @@ proc handle(req: Request, api: Api): Future[void] {.async.} =
         let r = api.store.loadFromConfig()
         await req.sendOk(%*{"ok": r.ok, "msg": r.msg})
         return
+      if path == "/api/export/xlsx":
+        if not api.store.result.ok and api.store.result.timetables.len == 0:
+          await req.sendErr("尚未排课, 无法导出")
+          return
+        let tmp = getHomeDir() / ".paimai"
+        discard existsOrCreateDir(tmp)
+        let outPath = tmp / "timetable_export.xlsx"
+        let r2 = exportResultToXlsx(api.store.school, api.store.result, outPath)
+        if not r2.ok:
+          await req.sendErr(r2.msg)
+          return
+        try:
+          let raw = readFile(outPath)
+          await req.sendBytes(Http200, raw,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "timetable.xlsx")
+        except CatchableError as e:
+          await req.sendErr("读取导出文件失败: " & e.msg)
+        return
       if path == "/api/clear":
         api.store.result = ScheduleResult(ok: false, message: "已清空排课", score: 0)
         await req.sendOk(%*{"ok": true, "msg": "已清空排课结果"})
@@ -104,7 +138,7 @@ proc handle(req: Request, api: Api): Future[void] {.async.} =
       return
   await req.sendErr("method not allowed", Http405)
 
-proc handleSafe(req: Request, api: Api) {.async.} =
+proc handleSafe(req: Request, api: Api) {.async, gcsafe.} =
   try:
     await handle(req, api)
   except CatchableError as e:
@@ -114,6 +148,6 @@ proc serve*(api: Api) {.async.} =
   let server = newAsyncHttpServer()
   let port = Port(api.port)
   echo "排课服务启动: http://127.0.0.1:" & $api.port & "/"
-  proc cb(req: Request): Future[void] {.async.} =
+  proc cb(req: Request): Future[void] {.async, gcsafe.} =
     await handleSafe(req, api)
   await server.serve(port, cb, "127.0.0.1")

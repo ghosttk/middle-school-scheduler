@@ -21,8 +21,13 @@ jobs:
           tar -xf /tmp/nim.tar.xz -C /opt
           echo "/opt/nim-2.2.10/bin" >> "$GITHUB_PATH"
 
+      - name: 安装 Nim 依赖 (xl, zippy)
+        run: |
+          nimble refresh
+          nimble install xl zippy -y
+
       - name: 构建 Linux x64 (release)
-        run: nim c -d:release -o:bin/scheduler src/scheduler/main.nim
+        run: nim c -d:release --mm:orc --threads:off -o:bin/scheduler src/scheduler/main.nim
 
       - name: 重命名 Linux 产物
         run: cp bin/scheduler bin/scheduler-linux-x64
@@ -31,7 +36,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y mingw-w64
 
       - name: 构建 Windows x64 (交叉编译, release)
-        run: nim c -d:release --os:windows --cpu:amd64 --gcc.exe:x86_64-w64-mingw32-gcc --gcc.linkerexe:x86_64-w64-mingw32-gcc -o:bin/scheduler.exe src/scheduler/main.nim
+        run: nim c -d:release --mm:orc --threads:off --os:windows --cpu:amd64 --gcc.exe:x86_64-w64-mingw32-gcc --gcc.linkerexe:x86_64-w64-mingw32-gcc -o:bin/scheduler.exe src/scheduler/main.nim
 
       - name: 重命名 Windows 产物
         run: cp bin/scheduler.exe bin/scheduler-windows-x64.exe

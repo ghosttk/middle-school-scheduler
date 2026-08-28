@@ -25,8 +25,12 @@
 ## 快速开始
 
 ```bash
+# 安装依赖 (xl / zippy)
+nimble refresh
+nimble install xl zippy -y
+
 # 构建
-nim c -d:release -o:bin/scheduler src/scheduler/main.nim
+nim c -d:release --mm:orc --threads:off -o:bin/scheduler src/scheduler/main.nim
 
 # 运行（默认 8765 端口，自动打开浏览器）
 ./bin/scheduler
@@ -45,8 +49,15 @@ scheduler/
 │   ├── domain.nim              # 领域模型 + 校验
 │   ├── store.nim               # 内存状态 / 磁盘持久化 / 示例数据
 │   ├── timetable.nim           # 排课算法
+│   ├── configloader.nim        # JSON 配置加载（兼容保留）
+│   ├── xlsxio.nim              # Excel 配置载入 + 排课结果导出
 │   ├── httpapi.nim             # HTTP 服务与路由（staticRead 内嵌前端）
 │   └── main.nim                # 入口 / 自动打开浏览器
+├── config/                     # 配置文件（Excel 格式，优先加载）
+│   ├── classes.xlsx            # 班级—课程—教师表
+│   ├── rules.xlsx              # 排课规则
+│   ├── classes.json            # 旧 JSON（回退，保留）
+│   └── rules.json              # 旧 JSON（回退，保留）
 └── www/index.html              # 前端单页应用
 ```
 
@@ -72,7 +83,8 @@ scheduler/
 | POST | `/api/persist` | 写入磁盘 |
 | POST | `/api/load` | 从磁盘加载 |
 | POST | `/api/sample` | 载入示例数据 |
-| POST | `/api/config/load` | 从 `config/` 重新载入配置 |
+| POST | `/api/config/load` | 从 `config/` 重新载入配置（优先 xlsx，缺则回退 JSON）|
+| POST | `/api/export/xlsx` | 导出排课结果为 Excel（`概览` + 每个班级 + 每位教师，共 N sheet）|
 | POST | `/api/clear` | 清空排课结果 |
 
 ## 数据存储
@@ -81,15 +93,37 @@ scheduler/
 
 ## 配置文件
 
-项目 `config/` 下提供两份人可读的 JSON 配置，启动时若没有历史磁盘数据则自动加载（也可调 `POST /api/config/load` 重新载入）：
+项目 `config/` 下提供两份 Excel 配置（**优先加载**）；若不存在则回退到同名 JSON（保留作兼容）。启动时若没有历史磁盘数据则自动加载（也可调 `POST /api/config/load` 重新载入）。
 
-- `config/classes.json`：班级—课程—教师表。每班列出开课科目、教师、周课时；`4+1` 表示 4 节单课 + 1 次连堂（共 6 课时）；课时为 0 或教师为空表示该班不开此课。
-- `config/rules.json`：排课规则。每条含 `subject` / `teacher`（空=全体）/ `days`（空=所有天，如 `["一"]`）/ `periods`（1 基，空=全部节次）/ `kind`：
-  - `必排`：硬性占用并锁定该时段（如升旗每周一第 2 节，全校锁定）
+### `config/classes.xlsx` — 班级—课程—教师表
+
+- **第 1 行**：填写说明（保留，不被当作数据）
+- **参数区（可选，A/B 两列键值）**：`daysPerWeek` / `periodsPerDay` / `morningCount` 三项，缺省时分别取 `5 / 8 / 4`
+- **表头行**：前两列为 `年级 | 班级`，之后按 `科目 | 教师姓名 | 科目 | 教师姓名 ...` 交替成对出现；自动定位到含 `年级` / `班级` 的行为表头
+- **数据行**：科目列填**周课时**（正整数或 `4+1` 表示 4 节单课 + 1 次连堂 = 6 课时，或 `美工+劳技` 表示单双周两科拼接）。课时为 0 或对应教师姓名列空白 → 该班不开此课。重名教师请在姓名后加数字标识
+
+### `config/rules.xlsx` — 排课规则
+
+表头：`科目 | 教师 | 星期 | 节次 | 规则 | 备注`（自动定位含 `科目` 的行）。每行一条规则，空白单元格取默认值：
+
+- 教师列空 → 该科目全体教师
+- 星期列空 → 全部星期；填写支持：`一` / `一二` / `一,二,三` / `1,2,3`
+- 节次列空 → 全部节次；填写支持 `1,2,3` 或范围 `1-5`（1 基）
+- 规则列（必填）：
+  - `必排`：硬性占用并锁定该时段（全校科目不存在时自动补建，例如 `升旗` 会自动给每个班级生成占位任务并锁定）
   - `不排`：该科目/教师不得排入指定时段
-  - `优先`：软偏好，落入指定时段加分（择优时倾向）
+  - `优先`：软偏好，落入指定时段加分
 
-配置文件用名称（非 id）书写，应用加载时自动映射为内部 id 并构建 `School`。
+> 两份 JSON (`classes.json` / `rules.json`) 仍保留在 `config/` 作备用加载源。
+
+## 排课结果导出 Excel
+
+- HTTP: `POST /api/export/xlsx` → 返回 `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`，文件名 `timetable.xlsx`
+- 也可在磁盘调用 `xlsxio.exportResultToXlsx(school, result, 路径)`
+- 生成的 xlsx 包含：
+  - `概览` sheet：排课成功状态、总分、消息、班/师/科/任务统计、未排上冲突清单
+  - `班级-<班名>`：每个班级一张课表（行=节次，列=星期，单元格=科目\\n(教师)）
+  - `教师-<姓名>`：每位教师一张课表（单元格=科目\\n班级）
 
 ## License
 

@@ -4,6 +4,7 @@ import std/os
 import std/sequtils
 import domain
 import configloader
+import xlsxio
 
 type
   Store* = ref object
@@ -43,17 +44,22 @@ proc loadFromDisk*(s: Store): tuple[ok: bool, msg: string] =
     return (false, "加载失败: " & e.msg)
 
 proc loadFromConfig*(s: Store): tuple[ok: bool, msg: string] =
-  ## 从项目 config/classes.json + config/rules.json 载入
-  let r = loadConfig()
-  if not r.ok:
-    return (false, r.msg)
-  s.school = r.sc
+  ## 优先从 xlsx 载入, 找不到则回退 JSON
+  if fileExists(classesXlsxPath()):
+    let r = loadConfigXlsx()
+    if not r.ok: return (false, r.msg)
+    s.school = r.sc
+  else:
+    let r = loadConfig()
+    if not r.ok: return (false, r.msg)
+    s.school = r.sc
   s.result = ScheduleResult(ok: false, message: "已载入配置, 待排课", score: 0)
   s.dirty = true
-  return (true, r.msg)
+  return (true, "已载入配置: " & $s.school.tasks.len & " 任务, " &
+               $s.school.rules.len & " 条规则")
 
 proc configAvailable*(): bool =
-  fileExists(classesPath())
+  fileExists(classesXlsxPath()) or fileExists(classesPath())
 
 # ---- JSON 输出 ----
 proc fullStateJson*(s: Store): JsonNode =

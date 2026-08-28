@@ -10,3 +10,5 @@ bin           = @["scheduler"]
 binDir = "bin"
 
 requires "nim >= 2.0.0"
+requires "xl >= 1.1.0"
+requires "zippy >= 0.10.4"
