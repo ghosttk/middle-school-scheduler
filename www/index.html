@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中学排课系统</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+         background:#f4f6fb; color:#1f2937; }
+  header { background:linear-gradient(135deg,#3b82f6,#6366f1); color:#fff; padding:14px 22px;
+           box-shadow:0 2px 8px rgba(0,0,0,.12); }
+  header h1 { margin:0; font-size:20px; }
+  header .sub { font-size:12px; opacity:.85; margin-top:2px; }
+  .toolbar { display:flex; gap:8px; flex-wrap:wrap; padding:10px 22px; background:#fff;
+             border-bottom:1px solid #e5e7eb; align-items:center; }
+  .toolbar button { border:0; background:#3b82f6; color:#fff; padding:8px 14px; border-radius:6px;
+             cursor:pointer; font-size:13px; }
+  .toolbar button:hover { background:#2563eb; }
+  .toolbar button.ghost { background:#eef2ff; color:#3730a3; }
+  .toolbar .spacer { flex:1; }
+  .toolbar .url { font-size:12px; color:#6b7280; }
+  nav.tabs { display:flex; gap:4px; background:#fff; padding:0 22px; border-bottom:1px solid #e5e7eb; }
+  nav.tabs button { border:0; background:transparent; padding:12px 18px; cursor:pointer;
+             font-size:14px; color:#6b7280; border-bottom:2px solid transparent; }
+  nav.tabs button.active { color:#3b82f6; border-bottom-color:#3b82f6; font-weight:600; }
+  main { padding:18px 22px 60px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .card { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:14px 16px;
+          box-shadow:0 1px 3px rgba(0,0,0,.04); margin-bottom:16px; }
+  .card h3 { margin:0 0 10px; font-size:15px; color:#111827; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { border:1px solid #e5e7eb; padding:6px 8px; text-align:center; }
+  th { background:#f9fafb; color:#374151; }
+  td.left { text-align:left; }
+  .del { color:#dc2626; cursor:pointer; }
+  .addform { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:8px;
+             align-items:end; margin-bottom:10px; }
+  .addform label { font-size:12px; color:#4b5563; }
+  .addform input, .addform select { padding:6px 8px; border:1px solid #d1d5db; border-radius:6px;
+             width:100%; font-size:13px; }
+  .small { font-size:12px; color:#6b7280; }
+  .pill { display:inline-block; background:#e0e7ff; color:#3730a3; border-radius:10px;
+          padding:1px 8px; font-size:11px; margin:1px; }
+  .pill.main { background:#fee2e2; color:#b91c1c; }
+  .badge-ok { color:#059669; font-weight:600; }
+  .badge-bad { color:#dc2626; font-weight:600; }
+  .selcell { background:#dbeafe !important; outline:2px solid #3b82f6; cursor:pointer; }
+  td.cell { cursor:pointer; min-width:90px; }
+  td.cell.empty { color:#9ca3af; background:#f9fafb; }
+  td.cell.has { background:#f0fdf4; }
+  .legend { font-size:12px; color:#6b7280; margin:6px 0; }
+  .chkrow { display:flex; flex-wrap:wrap; gap:6px; }
+  .chkrow label { background:#f3f4f6; border-radius:6px; padding:3px 8px; font-size:12px; }
+  .toast { position:fixed; bottom:18px; right:18px; background:#111827; color:#fff;
+           padding:10px 14px; border-radius:8px; font-size:13px; opacity:0; transition:.3s; z-index:50;}
+  .toast.show { opacity:1; }
+  .seg { display:inline-flex; border:1px solid #d1d5db; border-radius:6px; overflow:hidden; }
+  .seg button { border:0; background:#fff; padding:6px 12px; cursor:pointer; font-size:13px; }
+  .seg button.active { background:#3b82f6; color:#fff; }
+  select.lg { padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>中学排课系统</h1>
+  <div class="sub">Nim 桌面应用 · 本地 HTTP 服务</div>
+</header>
+
+<div class="toolbar">
+  <button onclick="runSchedule()">⚡ 一键排课</button>
+  <button class="ghost" onclick="persist()">💾 保存到磁盘</button>
+  <button class="ghost" onclick="loadDisk()">📂 从磁盘加载</button>
+  <button class="ghost" onclick="loadSample()">📋 载入示例数据</button>
+  <button class="ghost" onclick="clearResult()">🧹 清空排课</button>
+  <div class="spacer"></div>
+  <span class="url" id="urlhint"></span>
+</div>
+
+<nav class="tabs">
+  <button id="tab-data" class="active" onclick="switchTab('data')">基础数据</button>
+  <button id="tab-params" onclick="switchTab('params')">排课参数</button>
+  <button id="tab-result" onclick="switchTab('result')">排课结果</button>
+</nav>
+
+<main>
+  <!-- 基础数据 -->
+  <div id="pane-data">
+    <div class="grid2">
+      <!-- 科目 -->
+      <div class="card">
+        <h3>科目管理</h3>
+        <div class="addform">
+          <div><label>名称</label><input id="sub-name" placeholder="如 语文"></div>
+          <div><label>周课时</label><input id="sub-hours" type="number" value="2" min="1" max="20"></div>
+          <div><label>主科</label><select id="sub-main"><option value="1">是</option><option value="0">否</option></select></div>
+          <div><button onclick="addSubject()">+ 添加</button></div>
+        </div>
+        <div id="sub-list"></div>
+      </div>
+      <!-- 班级 -->
+      <div class="card">
+        <h3>班级管理</h3>
+        <div class="addform">
+          <div><label>年级</label><input id="cls-grade" placeholder="如 七年级" value="七年级"></div>
+          <div><label>班号</label><input id="cls-num" type="number" value="1" min="1"></div>
+          <div><button onclick="addClass()">+ 添加</button></div>
+        </div>
+        <div id="cls-list"></div>
+      </div>
+      <!-- 教师 -->
+      <div class="card">
+        <h3>教师管理</h3>
+        <div class="addform">
+          <div><label>姓名</label><input id="tea-name" placeholder="如 张老师"></div>
+          <div><label>可教科目</label><div id="tea-subjs" class="chkrow"></div></div>
+          <div><button onclick="addTeacher()">+ 添加</button></div>
+        </div>
+        <div id="tea-list"></div>
+      </div>
+      <!-- 教学任务 -->
+      <div class="card">
+        <h3>教学任务 (教师-班级-科目-周课时)</h3>
+        <div class="addform">
+          <div><label>教师</label><select id="task-tea" class="lg"></select></div>
+          <div><label>班级</label><select id="task-cls" class="lg"></select></div>
+          <div><label>科目</label><select id="task-sub" class="lg" onchange="autoHours()"></select></div>
+          <div><label>周课时</label><input id="task-hours" type="number" min="1" max="20" value="2"></div>
+          <div><button onclick="addTask()">+ 添加</button></div>
+        </div>
+        <div id="task-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 参数 -->
+  <div id="pane-params" style="display:none">
+    <div class="card" style="max-width:520px">
+      <h3>排课参数</h3>
+      <div class="addform">
+        <div><label>每周上课天数</label><input id="p-days" type="number" min="1" max="7" value="5"></div>
+        <div><label>每天总节数</label><input id="p-periods" type="number" min="1" max="12" value="8"></div>
+        <div><label>上午节数</label><input id="p-morning" type="number" min="0" max="12" value="4"></div>
+      </div>
+      <p class="small">说明: 上午时段优先安排主科; 同一科目同一天一般不超过 2 节; 科目尽量分散到不同天。</p>
+      <button onclick="saveParams()">保存参数</button>
+    </div>
+  </div>
+
+  <!-- 结果 -->
+  <div id="pane-result" style="display:none">
+    <div class="card">
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+        <div class="seg">
+          <button id="seg-class" class="active" onclick="setSeg('class')">班级课表</button>
+          <button id="seg-teacher" onclick="setSeg('teacher')">教师课表</button>
+        </div>
+        <select id="result-sel" class="lg" onchange="renderResult()"></select>
+        <span id="result-status" class="small"></span>
+      </div>
+      <div class="legend">点击同一班级课表的两个单元格可交换课时(调课), 系统会校验教师冲突。</div>
+      <div id="result-grid"></div>
+    </div>
+  </div>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+let S = null;            // 全局状态 {school, result}
+let curTab = 'data';
+let seg = 'class';
+let selSlot = null;      // {classId, slot} 已选中的首个单元格
+
+const DAY_NAMES = ['周一','周二','周三','周四','周五','周六','周日'];
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+async function api(method, path, body) {
+  const opt = {method, headers:{'Content-Type':'application/json'}};
+  if (body !== undefined) opt.body = JSON.stringify(body);
+  const res = await fetch(path, opt);
+  let j; try { j = await res.json(); } catch(e){ j = {ok:false, msg:'非JSON响应'} }
+  return j;
+}
+
+async function loadState() {
+  const j = await api('GET', '/api/state');
+  if (j && j.school) { S = j; renderAll(); }
+  else toast('加载状态失败');
+}
+async function saveSchool() {
+  const j = await api('POST', '/api/save-school', S.school);
+  if (j.ok) toast('数据已更新'); else toast(j.msg||'保存失败');
+}
+async function runSchedule() {
+  toast('正在排课...');
+  const j = await api('POST', '/api/schedule');
+  await loadState();
+  switchTab('result');
+  toast(j.msg || (j.ok ? '排课完成' : '排课失败'));
+}
+async function persist() { const j=await api('POST','/api/persist'); toast(j.msg); }
+async function loadDisk() { const j=await api('POST','/api/load'); await loadState(); toast(j.msg); }
+async function loadSample() { const j=await api('POST','/api/sample'); await loadState(); toast(j.msg); }
+async function clearResult() { const j=await api('POST','/api/clear'); await loadState(); toast(j.msg||'已清空'); }
+
+function uid(p){ return p + '_' + Math.random().toString(36).slice(2,8); }
+function $(id){ return document.getElementById(id); }
+function esc(s){ return (s||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+function switchTab(t){
+  curTab = t;
+  ['data','params','result'].forEach(x=>{
+    $('pane-'+x).style.display = (x==t?'block':'none');
+  });
+  ['data','params','result'].forEach(x=>{
+    $('tab-'+x).classList.toggle('active', x==t);
+  });
+  if (t==='result') renderResult();
+}
+function setSeg(s){ seg=s; selSlot=null; renderResult(); }
+
+function renderAll(){
+  renderSubjects(); renderClasses(); renderTeachers(); renderTasks();
+  renderParamsSel();
+  renderParams();
+  renderResultSel();
+  renderResult();
+}
+
+// ---- 科目 ----
+function renderSubjects(){
+  const arr = S.school.subjects||[];
+  let h = '<table><tr><th>名称</th><th>周课时</th><th>主科</th><th></th></tr>';
+  arr.forEach(s=>{
+    h += `<tr><td>${esc(s.name)}</td><td>${s.weeklyHours}</td>
+      <td>${s.isMain?'<span class="pill main">主</span>':'否'}</td>
+      <td><span class="del" onclick="delSubject('${s.id}')">删除</span></td></tr>`;
+  });
+  h += '</table>';
+  $('sub-list').innerHTML = arr.length?h:'<p class="small">暂无科目</p>';
+}
+async function addSubject(){
+  const name=$('sub-name').value.trim(); if(!name){toast('请输入名称');return;}
+  const hours=parseInt($('sub-hours').value)||2;
+  const isMain=$('sub-main').value==='1';
+  S.school.subjects.push({id:uid('S'),name,weeklyHours:hours,isMain});
+  $('sub-name').value=''; await saveSchool(); renderAll();
+}
+async function delSubject(id){
+  S.school.subjects = S.school.subjects.filter(x=>x.id!==id);
+  // 同步清理引用此科目的教师科目与任务
+  S.school.teachers.forEach(t=> t.subjects = (t.subjects||[]).filter(s=>s!==id));
+  S.school.tasks = S.school.tasks.filter(t=>t.subjectId!==id);
+  await saveSchool(); renderAll();
+}
+
+// ---- 班级 ----
+function renderClasses(){
+  const arr=S.school.classes||[];
+  let h='<table><tr><th>年级</th><th>班级</th><th></th></tr>';
+  arr.forEach(c=>{
+    h+=`<tr><td>${esc(c.grade)}</td><td>${esc(c.name)}</td>
+      <td><span class="del" onclick="delClass('${c.id}')">删除</span></td></tr>`;
+  });
+  h+='</table>';
+  $('cls-list').innerHTML = arr.length?h:'<p class="small">暂无班级</p>';
+}
+async function addClass(){
+  const grade=$('cls-grade').value.trim(); const num=$('cls-num').value.trim();
+  if(!grade){toast('请输入年级');return;}
+  const name=grade+num+'班';
+  S.school.classes.push({id:uid('C'),name,grade});
+  await saveSchool(); renderAll();
+}
+async function delClass(id){
+  S.school.classes=S.school.classes.filter(c=>c.id!==id);
+  S.school.tasks=S.school.tasks.filter(t=>t.classId!==id);
+  await saveSchool(); renderAll();
+}
+
+// ---- 教师 ----
+function renderTeacherSubjCheckboxes(){
+  const arr=S.school.subjects||[];
+  $('tea-subjs').innerHTML = arr.map(s=>
+    `<label><input type="checkbox" value="${s.id}"> ${esc(s.name)}</label>`).join('') || '<span class="small">先建科目</span>';
+}
+function renderTeachers(){
+  renderTeacherSubjCheckboxes();
+  const arr=S.school.teachers||[];
+  let h='<table><tr><th>姓名</th><th>可教科目</th><th></th></tr>';
+  arr.forEach(t=>{
+    const subs=(t.subjects||[]).map(sid=>subjName(sid)).filter(x=>x);
+    h+=`<tr><td>${esc(t.name)}</td><td class="left">${subs.map(n=>`<span class="pill">${esc(n)}</span>`).join('')}</td>
+      <td><span class="del" onclick="delTeacher('${t.id}')">删除</span></td></tr>`;
+  });
+  h+='</table>';
+  $('tea-list').innerHTML=arr.length?h:'<p class="small">暂无教师</p>';
+}
+async function addTeacher(){
+  const name=$('tea-name').value.trim(); if(!name){toast('请输入姓名');return;}
+  const subs=[...document.querySelectorAll('#tea-subjs input:checked')].map(c=>c.value);
+  if(subs.length===0){toast('至少选择一个可教科目');return;}
+  S.school.teachers.push({id:uid('T'),name,subjects:subs});
+  $('tea-name').value=''; await saveSchool(); renderAll();
+}
+async function delTeacher(id){
+  S.school.teachers=S.school.teachers.filter(t=>t.id!==id);
+  S.school.tasks=S.school.tasks.filter(t=>t.teacherId!==id);
+  await saveSchool(); renderAll();
+}
+
+// ---- 任务 ----
+function renderParamsSel(){
+  const ts=S.school.teachers||[], cs=S.school.classes||[], ss=S.school.subjects||[];
+  $('task-tea').innerHTML = ts.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('') || '<option>无教师</option>';
+  $('task-cls').innerHTML = cs.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('') || '<option>无班级</option>';
+  $('task-sub').innerHTML = ss.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('') || '<option>无科目</option>';
+  autoHours();
+}
+function autoHours(){
+  const sid=$('task-sub').value; const s=(S.school.subjects||[]).find(x=>x.id===sid);
+  if(s) $('task-hours').value=s.weeklyHours;
+}
+function renderTasks(){
+  const arr=S.school.tasks||[];
+  let h='<table><tr><th>教师</th><th>班级</th><th>科目</th><th>周课时</th><th></th></tr>';
+  arr.forEach(t=>{
+    h+=`<tr><td>${esc(teacherName(t.teacherId))}</td><td>${esc(className(t.classId))}</td>
+      <td>${esc(subjName(t.subjectId))}</td><td>${t.hoursPerWeek}</td>
+      <td><span class="del" onclick="delTask('${t.id}')">删除</span></td></tr>`;
+  });
+  h+='</table>';
+  $('task-list').innerHTML=arr.length?h:'<p class="small">暂无教学任务</p>';
+}
+async function addTask(){
+  const tid=$('task-tea').value, cid=$('task-cls').value, sid=$('task-sub').value;
+  if(!tid||!cid||!sid){toast('请补全任务');return;}
+  const hours=parseInt($('task-hours').value)||1;
+  S.school.tasks.push({id:uid('K'),teacherId:tid,classId:cid,subjectId:sid,hoursPerWeek:hours});
+  await saveSchool(); renderAll();
+}
+async function delTask(id){
+  S.school.tasks=S.school.tasks.filter(t=>t.id!==id);
+  await saveSchool(); renderAll();
+}
+
+// ---- 参数 ----
+function renderParams(){
+  const p=S.school.params||{};
+  $('p-days').value=p.daysPerWeek||5;
+  $('p-periods').value=p.periodsPerDay||8;
+  $('p-morning').value=p.morningCount||4;
+}
+async function saveParams(){
+  S.school.params={
+    daysPerWeek:parseInt($('p-days').value)||5,
+    periodsPerDay:parseInt($('p-periods').value)||8,
+    morningCount:parseInt($('p-morning').value)||4
+  };
+  await saveSchool(); renderResultSel(); renderResult();
+  toast('参数已保存');
+}
+
+// ---- 查找辅助 ----
+function subjName(id){const s=(S.school.subjects||[]).find(x=>x.id===id);return s?s.name:'';}
+function teacherName(id){const t=(S.school.teachers||[]).find(x=>x.id===id);return t?t.name:'(无)';}
+function className(id){const c=(S.school.classes||[]).find(x=>x.id===id);return c?c.name:'(无)';}
+function taskById(id){return (S.school.tasks||[]).find(x=>x.id===id);}
+
+// ---- 结果下拉 ----
+function renderResultSel(){
+  const sel=$('result-sel');
+  if(seg==='class'){
+    sel.innerHTML=(S.school.classes||[]).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')||'<option>无班级</option>';
+  } else {
+    sel.innerHTML=(S.school.teachers||[]).map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')||'<option>无教师</option>';
+  }
+}
+
+// ---- 结果渲染 ----
+function getTimetable(classId){return (S.result.timetables||[]).find(t=>t.classId===classId);}
+
+function renderResult(){
+  if(!S){return;}
+  renderResultSel();
+  const r=S.result||{ok:false,message:'未排课'};
+  $('result-status').innerHTML = r.ok?`<span class="badge-ok">✓ ${esc(r.message||'')}</span> (评分 ${r.score})`
+                                     :`<span class="badge-bad">✗ ${esc(r.message||'未排课')}</span>`;
+  const p=S.school.params||{daysPerWeek:5,periodsPerDay:8};
+  const days=p.daysPerWeek, periods=p.periodsPerDay;
+  const selVal=$('result-sel').value;
+  let html='';
+  if(seg==='class'){
+    const tt=getTimetable(selVal);
+    html = renderGrid(days, periods, (d,per)=>{
+      const slot=d*periods+per;
+      const cell = tt? tt.grid[slot]: null;
+      if(!cell || !cell.taskId) return {empty:true};
+      const tk=taskById(cell.taskId);
+      if(!tk) return {empty:true};
+      return {subject:subjName(tk.subjectId), teacher:teacherName(tk.teacherId),
+              classId:selVal, slot, locked:cell.locked};
+    });
+  } else {
+    // 教师课表: 遍历所有班级课表, 该教师占用的时段
+    const tid=selVal;
+    const occ={}; // slot -> {class, subject}
+    (S.result.timetables||[]).forEach(tt=>{
+      tt.grid.forEach((cell,slot)=>{
+        if(!cell.taskId) return;
+        const tk=taskById(cell.taskId);
+        if(tk && tk.teacherId===tid) occ[slot]={subject:subjName(tk.subjectId), class:className(tk.classId)};
+      });
+    });
+    html = renderGrid(days, periods, (d,per)=>{
+      const slot=d*periods+per;
+      if(slot in occ) return {subject:occ[slot].subject, teacher:occ[slot].class};
+      return {empty:true};
+    });
+  }
+  $('result-grid').innerHTML = html;
+}
+
+function renderGrid(days, periods, cellFn){
+  let h='<table><tr><th>时段</th>';
+  for(let d=0; d<days; d++) h+=`<th>${DAY_NAMES[d]||('D'+d)}</th>`;
+  h+='</tr>';
+  for(let per=0; per<periods; per++){
+    h+=`<tr><td class="left"><b>第${per+1}节</b></td>`;
+    for(let d=0; d<days; d++){
+      const c=cellFn(d,per);
+      const slot=d*periods+per;
+      if(c.empty){
+        h+=`<td class="cell empty" data-slot="${slot}" data-class="${c.classId||''}" onclick="cellClick(this)">—</td>`;
+      } else {
+        h+=`<td class="cell has" data-slot="${slot}" data-class="${c.classId||''}" onclick="cellClick(this)">
+          <div><b>${esc(c.subject||'')}</b></div>
+          <div class="small">${esc(c.teacher||'')}</div></td>`;
+      }
+    }
+    h+='</tr>';
+  }
+  h+='</table>';
+  return h;
+}
+
+async function cellClick(el){
+  if(seg!=='class'){ toast('调课请在班级课表视图操作'); return; }
+  const classId=el.dataset.class; const slot=parseInt(el.dataset.slot);
+  if(!classId) return;
+  if(selSlot===null){
+    selSlot={classId, slot}; el.classList.add('selcell'); toast('已选中, 再点击同班级另一格交换');
+    return;
+  }
+  if(selSlot.classId!==classId){ toast('需在同一班级内交换'); clearSel(); return; }
+  if(selSlot.slot===slot){ clearSel(); toast('已取消'); return; }
+  const a=selSlot.slot, b=slot; clearSel();
+  const j=await api('POST','/api/swap',{classId, slotA:a, slotB:b});
+  if(j.ok){ await loadState(); renderResult(); toast('交换成功'); }
+  else toast(j.msg||'交换失败');
+  function clearSel(){ selSlot=null; document.querySelectorAll('.selcell').forEach(e=>e.classList.remove('selcell')); }
+}
+
+// 启动
+window.addEventListener('load', async ()=>{
+  $('urlhint').textContent = location.href;
+  await loadState();
+});
+</script>
+</body>
+</html>

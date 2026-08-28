@@ -1,0 +1,11 @@
+# 编译输出 / 缓存
+/bin/
+/nimcache/
+*.exe
+*.pdb
+
+# 系统/编辑器
+.DS_Store
+*.swp
+.idea/
+.vscode/
