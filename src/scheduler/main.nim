@@ -4,7 +4,6 @@ import std/os
 import std/asyncdispatch
 import std/strutils
 import std/browsers
-import domain
 import store
 import httpapi
 

@@ -1,5 +1,9 @@
 # 中学排课系统（Nim 桌面应用）
 
+![CI](https://github.com/ghosttk/middle-school-scheduler/actions/workflows/release.yml/badge.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Nim](https://img.shields.io/badge/Nim-2.2.10-ffe953.svg)
+
 一个用 [Nim](https://nim-lang.org) 编写的中学排课桌面软件。单一可执行文件，内嵌 HTTP 服务 + 单页前端（HTML/CSS/JS 编译期嵌入），启动后自动打开系统浏览器——零原生 GUI 依赖、跨平台。
 
 ## 功能特性

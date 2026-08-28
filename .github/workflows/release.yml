@@ -21,23 +21,41 @@ jobs:
           tar -xf /tmp/nim.tar.xz -C /opt
           echo "/opt/nim-2.2.10/bin" >> "$GITHUB_PATH"
 
-      - name: 构建 (release)
+      - name: 构建 Linux x64 (release)
         run: nim c -d:release -o:bin/scheduler src/scheduler/main.nim
 
-      - name: 重命名为平台产物名
+      - name: 重命名 Linux 产物
         run: cp bin/scheduler bin/scheduler-linux-x64
 
-      - name: 上传构建产物
+      - name: 安装 mingw-w64 (用于 Windows 交叉编译)
+        run: sudo apt-get update && sudo apt-get install -y mingw-w64
+
+      - name: 构建 Windows x64 (交叉编译, release)
+        run: nim c -d:release --os:windows --cpu:amd64 --gcc.exe:x86_64-w64-mingw32-gcc --gcc.linkerexe:x86_64-w64-mingw32-gcc -o:bin/scheduler.exe src/scheduler/main.nim
+
+      - name: 重命名 Windows 产物
+        run: cp bin/scheduler.exe bin/scheduler-windows-x64.exe
+
+      - name: 上传 Linux 产物
         uses: actions/upload-artifact@v4
         with:
           name: scheduler-linux-x64
           path: bin/scheduler-linux-x64
           if-no-files-found: error
 
+      - name: 上传 Windows 产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: scheduler-windows-x64
+          path: bin/scheduler-windows-x64.exe
+          if-no-files-found: error
+
       - name: 创建 Release（仅 tag）
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: bin/scheduler-linux-x64
+          files: |
+            bin/scheduler-linux-x64
+            bin/scheduler-windows-x64.exe
           generate_release_notes: true
           fail_on_unmatched_files: true
