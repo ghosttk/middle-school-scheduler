@@ -64,6 +64,15 @@
   .seg button { border:0; background:#fff; padding:6px 12px; cursor:pointer; font-size:13px; }
   .seg button.active { background:#3b82f6; color:#fff; }
   select.lg { padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; font-size:13px; }
+  /* 教师视图调课预览: 浮动表格 */
+  .float-tt { position:fixed; z-index:1000; display:none; background:#fff; border:1px solid #d1d5db;
+              border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.18); padding:8px 10px;
+              max-height:62vh; overflow:auto; pointer-events:none; font-size:12px; max-width:560px; }
+  .float-tt.show { display:block; }
+  .float-tt .float-title { font-weight:600; margin-bottom:6px; color:#1f2937; border-bottom:1px solid #e5e7eb; padding-bottom:4px; }
+  .float-tt table { font-size:11px; }
+  .float-tt td.cell { min-width:54px; padding:3px 4px; }
+  .float-tt td.cell.hl { outline:2px solid #f59e0b; outline-offset:-2px; }
 </style>
 </head>
 <body>
@@ -165,6 +174,7 @@
       </div>
       <div id="result-legend" class="legend">点击同一班级课表的两个单元格可交换课时(调课), 系统会校验教师冲突。</div>
       <div id="result-grid"></div>
+      <div id="float-tt" class="float-tt"></div>
     </div>
   </div>
 </main>
@@ -176,6 +186,9 @@ let S = null;            // 全局状态 {school, result}
 let curTab = 'data';
 let seg = 'class';
 let selSlot = null;      // {classId, slot} 已选中的首个单元格
+let tracking = false;    // 教师视图调课预览: 选中首课后跟踪鼠标
+let floatEl = null;      // 浮动表格元素
+let lastHoverSlot = -1;  // 上次悬停 slot, 去重避免高频重渲染
 
 const DAY_NAMES = ['周一','周二','周三','周四','周五','周六','周日'];
 
@@ -228,7 +241,7 @@ function switchTab(t){
   });
   if (t==='result') renderResult();
 }
-function setSeg(s){ seg=s; selSlot=null; renderResult(); }
+function setSeg(s){ seg=s; selSlot=null; tracking=false; hideFloat(); renderResult(); }
 
 function renderAll(){
   renderSubjects(); renderClasses(); renderTeachers(); renderTasks();
@@ -450,9 +463,9 @@ function renderGrid(days, periods, cellFn){
       const c=cellFn(d,per);
       const slot=d*periods+per;
       if(c.empty){
-        h+=`<td class="cell empty ${c.locked?'locked':''}" data-slot="${slot}" data-class="${c.classId||''}" onclick="cellClick(this)">—</td>`;
+        h+=`<td class="cell empty ${c.locked?'locked':''} ${c.highlight?'hl':''}" data-slot="${slot}" data-class="${c.classId||''}" onclick="cellClick(this)">—</td>`;
       } else {
-        h+=`<td class="cell has ${c.locked?'locked':''}" data-slot="${slot}" data-class="${c.classId||''}" onclick="cellClick(this)">
+        h+=`<td class="cell has ${c.locked?'locked':''} ${c.highlight?'hl':''}" data-slot="${slot}" data-class="${c.classId||''}" onclick="cellClick(this)">
           <div><b>${esc(c.subject||'')}</b></div>
           <div class="small">${esc(c.teacher||'')}</div></td>`;
       }
@@ -470,9 +483,8 @@ async function cellClick(el){
     // 第一格必须是有课的单元格(带 classId)
     if(!cellClass){ toast('请先选择有课的单元格'); return; }
     selSlot={classId:cellClass, slot}; el.classList.add('selcell');
-    toast(seg==='teacher'
-      ? `已选中 ${className(cellClass)} 此课, 再点同班级另一课或空格交换`
-      : '已选中, 再点击同班级另一格交换');
+    if(seg==='teacher'){ tracking=true; lastHoverSlot=-1; toast(`已选中 ${className(cellClass)} 此课, 鼠标悬停其他格可预览对方教师课表`); }
+    else toast('已选中, 再点击同班级另一格交换');
     return;
   }
   // 已有选中: 当前为第二格
@@ -489,12 +501,79 @@ async function cellClick(el){
   const j=await api('POST','/api/swap',{classId:targetClass, slotA:a, slotB:b});
   if(j.ok){ await loadState(); renderResult(); toast('交换成功'); }
   else toast(j.msg||'交换失败');
-  function clearSel(){ selSlot=null; document.querySelectorAll('.selcell').forEach(e=>e.classList.remove('selcell')); }
+  function clearSel(){ selSlot=null; tracking=false; hideFloat(); document.querySelectorAll('.selcell').forEach(e=>e.classList.remove('selcell')); }
+}
+
+// ---- 教师视图调课预览: 浮动表格显示对方教师课表 ----
+// 语义: 选中教师A在班级X的课(slot S)后, 鼠标悬停任意 slot S',
+//       浮动表格显示"班级X在 slot S' 的授课教师"的完整课表(调课对方预览), 高亮对方该 slot 的课
+function teacherAtSlot(classId, slot){
+  const tt=(S.result.timetables||[]).find(t=>t.classId===classId);
+  if(!tt) return null;
+  const c=tt.grid[slot];
+  if(!c || !c.taskId) return null;  // 该班此 slot 空闲
+  const tk=taskById(c.taskId);
+  return tk? tk.teacherId : null;
+}
+
+function buildTeacherGridHtml(tid, hlSlot){
+  const p=S.school.params||{daysPerWeek:5,periodsPerDay:8};
+  const days=p.daysPerWeek, periods=p.periodsPerDay;
+  const occ={};
+  (S.result.timetables||[]).forEach(tt=>{
+    tt.grid.forEach((cell,slot)=>{
+      if(!cell.taskId) return;
+      const tk=taskById(cell.taskId);
+      if(tk && tk.teacherId===tid) occ[slot]={subject:subjName(tk.subjectId), class:className(tk.classId), classId:tk.classId};
+    });
+  });
+  return renderGrid(days, periods, (d,per)=>{
+    const slot=d*periods+per;
+    if(slot in occ) return {subject:occ[slot].subject, teacher:occ[slot].class, classId:occ[slot].classId, highlight: slot===hlSlot};
+    return {empty:true, highlight: slot===hlSlot};
+  });
+}
+
+function renderFloatTT(tid, slot){
+  if(!floatEl) return;
+  const cls=className(selSlot? selSlot.classId : '');
+  if(!tid){
+    floatEl.innerHTML = `<div class="float-title">班级 ${esc(cls)} 在此时段空闲, 可调入此课</div>`;
+  } else {
+    floatEl.innerHTML = `<div class="float-title">对方教师 ${esc(teacherName(tid))} 的课表 <span class="small">(班级 ${esc(cls)} 此时段由其授课)</span></div>` + buildTeacherGridHtml(tid, slot);
+  }
+  floatEl.classList.add('show');
+}
+
+function hideFloat(){ if(floatEl){ floatEl.classList.remove('show'); lastHoverSlot=-1; } }
+
+function initFloatTracking(){
+  floatEl=$('float-tt');
+  const grid=$('result-grid');
+  grid.addEventListener('mousemove', e=>{
+    if(!tracking || seg!=='teacher' || !selSlot) return;
+    const td=e.target.closest('td[data-slot]');
+    if(!td) return;
+    const slot=parseInt(td.dataset.slot);
+    if(isNaN(slot)) return;
+    // 跟随鼠标定位(右下偏移, 越界则翻向)
+    const w=floatEl.offsetWidth||280, h=floatEl.offsetHeight||200;
+    let left=e.clientX+16, top=e.clientY+16;
+    if(left+w>innerWidth) left=e.clientX-w-16;
+    if(top+h>innerHeight) top=e.clientY-h-16;
+    floatEl.style.left=Math.max(4,left)+'px';
+    floatEl.style.top=Math.max(4,top)+'px';
+    if(slot===lastHoverSlot) return;  // 同 slot 不重复渲染
+    lastHoverSlot=slot;
+    renderFloatTT(teacherAtSlot(selSlot.classId, slot), slot);
+  });
+  grid.addEventListener('mouseleave', hideFloat);
 }
 
 // 启动
 window.addEventListener('load', async ()=>{
   $('urlhint').textContent = location.href;
+  initFloatTracking();
   await loadState();
 });
 </script>
