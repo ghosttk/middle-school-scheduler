@@ -49,6 +49,11 @@
   td.cell { cursor:pointer; min-width:90px; }
   td.cell.empty { color:#9ca3af; background:#f9fafb; }
   td.cell.has { background:#f0fdf4; }
+  /* 教师课表视图: 不可调(锁定)红, 可调(非锁定有课/空格)绿 */
+  #result-grid.tv td.cell.has.locked { background:#fee2e2; }
+  #result-grid.tv td.cell.has:not(.locked) { background:#dcfce7; }
+  #result-grid.tv td.cell.empty.locked { background:#fee2e2; }
+  #result-grid.tv td.cell.empty:not(.locked) { background:#dcfce7; color:#16a34a; }
   .legend { font-size:12px; color:#6b7280; margin:6px 0; }
   .chkrow { display:flex; flex-wrap:wrap; gap:6px; }
   .chkrow label { background:#f3f4f6; border-radius:6px; padding:3px 8px; font-size:12px; }
@@ -412,23 +417,26 @@ function renderResult(){
   } else {
     // 教师课表: 遍历所有班级课表, 该教师占用的时段
     const tid=selVal;
-    const occ={}; // slot -> {class, subject, classId}
+    const occ={}; // slot -> {class, subject, classId, locked}
+    const lockedSlots=new Set(); // 任意班级在该 slot 锁定(如升旗), 教师视图该格不可调
     (S.result.timetables||[]).forEach(tt=>{
       tt.grid.forEach((cell,slot)=>{
+        if(cell.locked) lockedSlots.add(slot);
         if(!cell.taskId) return;
         const tk=taskById(cell.taskId);
-        if(tk && tk.teacherId===tid) occ[slot]={subject:subjName(tk.subjectId), class:className(tk.classId), classId:tk.classId};
+        if(tk && tk.teacherId===tid) occ[slot]={subject:subjName(tk.subjectId), class:className(tk.classId), classId:tk.classId, locked:!!cell.locked};
       });
     });
     html = renderGrid(days, periods, (d,per)=>{
       const slot=d*periods+per;
-      if(slot in occ) return {subject:occ[slot].subject, teacher:occ[slot].class, classId:occ[slot].classId};
-      return {empty:true};
+      if(slot in occ) return {subject:occ[slot].subject, teacher:occ[slot].class, classId:occ[slot].classId, locked:occ[slot].locked};
+      return {empty:true, locked: lockedSlots.has(slot)};
     });
   }
   $('result-grid').innerHTML = html;
+  $('result-grid').classList.toggle('tv', seg==='teacher');
   $('result-legend').textContent = seg==='teacher'
-    ? '教师调课: 先点击该教师的一节课, 再点同班级的另一节课(或空格)交换; 跨班级不支持, 系统会校验教师冲突。'
+    ? '教师调课: 先点击该教师的一节课, 再点同班级的另一节课(或空格)交换; 红色为锁定不可调, 绿色可调。'
     : '点击同一班级课表的两个单元格可交换课时(调课), 系统会校验教师冲突。';
 }
 
@@ -442,9 +450,9 @@ function renderGrid(days, periods, cellFn){
       const c=cellFn(d,per);
       const slot=d*periods+per;
       if(c.empty){
-        h+=`<td class="cell empty" data-slot="${slot}" data-class="${c.classId||''}" onclick="cellClick(this)">—</td>`;
+        h+=`<td class="cell empty ${c.locked?'locked':''}" data-slot="${slot}" data-class="${c.classId||''}" onclick="cellClick(this)">—</td>`;
       } else {
-        h+=`<td class="cell has" data-slot="${slot}" data-class="${c.classId||''}" onclick="cellClick(this)">
+        h+=`<td class="cell has ${c.locked?'locked':''}" data-slot="${slot}" data-class="${c.classId||''}" onclick="cellClick(this)">
           <div><b>${esc(c.subject||'')}</b></div>
           <div class="small">${esc(c.teacher||'')}</div></td>`;
       }
