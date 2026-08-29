@@ -147,7 +147,7 @@ proc handleSafe(req: Request, api: Api) {.async, gcsafe.} =
 proc serve*(api: Api) {.async.} =
   let server = newAsyncHttpServer()
   let port = Port(api.port)
-  echo "排课服务启动: http://127.0.0.1:" & $api.port & "/"
+  echo "排课服务启动: http://0.0.0.0:" & $api.port & "/"
   proc cb(req: Request): Future[void] {.async, gcsafe.} =
     await handleSafe(req, api)
-  await server.serve(port, cb, "127.0.0.1")
+  await server.serve(port, cb, "0.0.0.0")
