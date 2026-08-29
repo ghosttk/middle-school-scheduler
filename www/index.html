@@ -376,11 +376,13 @@ function taskById(id){return (S.school.tasks||[]).find(x=>x.id===id);}
 // ---- 结果下拉 ----
 function renderResultSel(){
   const sel=$('result-sel');
+  const prev=sel.value;  // 重建下拉前记住当前选中, 避免切换时回落到首项
   if(seg==='class'){
     sel.innerHTML=(S.school.classes||[]).map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')||'<option>无班级</option>';
   } else {
     sel.innerHTML=(S.school.teachers||[]).map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('')||'<option>无教师</option>';
   }
+  if(prev && Array.from(sel.options).some(o=>o.value===prev)) sel.value=prev;
 }
 
 // ---- 结果渲染 ----
